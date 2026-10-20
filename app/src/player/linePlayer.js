@@ -1,7 +1,7 @@
 // Plays a channel on a <video>, trying its lines (URLs) until one works.
 //
 // Public IPTV lists are full of dead links, so a channel typically has 5–20
-// lines. On start the player races a quick fetch of the first few playlists and
+// lines. On start the player races a quick fetch of the first 12 playlists and
 // starts with whichever answers first (or with the line that last worked for
 // this channel). Then a line that errors, doesn't start within START_TIMEOUT
 // or stalls for STALL_TIMEOUT is dropped for the next one, until every line has
@@ -13,7 +13,7 @@
 export const START_TIMEOUT = 10000;
 export const STALL_TIMEOUT = 12000;
 export const PROBE_TIMEOUT = 3000;
-export const PROBE_COUNT = 8;
+export const PROBE_COUNT = 12;
 
 export function isClipUrl(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);

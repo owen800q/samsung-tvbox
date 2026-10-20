@@ -14,7 +14,8 @@ The app is built like [samsung-bilibili](https://github.com/owen800q/samsung-bil
 |-|-|
 | Sources | 3 TVAPP subscriptions are on by default (Guovin IPTV-API IPv4, zbds IPv4, BurningC4); 12 more can be switched on in 设置. You can also add any M3U/TXT URL. GitHub raw URLs fall back to `gh-proxy.com` and `ghfast.top`. |
 | Lineup | Every subscription is merged by channel. `CCTV-1`, `CCTV1综合` and `CCTV-1 HD` become one channel. Each channel keeps every URL found for it as a separate **line** (typically 5–20). Groups: 收藏, 央视 (CCTV-1…17 in order), 卫视 (湖南, 浙江, 东方, 江苏, 北京, 广东…), 港澳台, provinces (广东 first, with local stations such as 广东珠江, 广东体育 and 广州综合), then the sources' own groups (电影, 纪录, 直播中国…). |
-| Playback | Public lists are full of dead links. On a channel change the app tries the first 8 playlists at once and starts with the fastest that answers, or with the line that last worked for that channel. A line that errors, doesn't start within 10 s, stalls for 12 s or turns out to be a recording moves on to the next line. Stand-in clips (a "source expired" `.mp4`, or Kuaishou/Douyin recordings listed under a live channel's name) are dropped when a channel has any live line. |
+| Playback | Public lists are full of dead links. On a channel change the app tries the first 12 playlists at once and starts with the fastest that answers, or with the line that last worked for that channel. A line that errors, doesn't start within 10 s, stalls for 12 s or turns out to be a recording moves on to the next line. Stand-in clips (a "source expired" `.mp4`, or Kuaishou/Douyin recordings listed under a live channel's name) are dropped when a channel has any live line. |
+| Relay (optional) | Lines that only answer viewers in mainland China can play through `relay/server.mjs` on a server there. Set it on the TV in 设置 → 中转服务器; each channel then gets relayed copies of its lines. See [relay/README.md](relay/README.md). |
 | Startup | Opens straight into the last channel. The lineup comes from the cached playlists, and is refreshed in the background every 6 hours. |
 
 ## Remote
@@ -57,7 +58,7 @@ Browser development: `cd app && npm run dev` (http://localhost:5173 at 1920×108
 ## Testing
 
 - `npm test`: the playlist parsers, channel merging and grouping, line ordering, the probe and failover, and the update loader (`ota/`).
-- `npm run check:streams [-- 湖南卫视 广东卫视 …] [--all-sources]`: fetches the subscriptions and tests every line of the main channels from the current network (playlist plus first segment). Use it on the TV's network to see which lines work there.
+- `npm run check:streams [-- 湖南卫视 广东卫视 …] [--all-sources] [--relay <url>]`: fetches the subscriptions and tests every line of the main channels from the current network (playlist plus first segment). Use it on the TV's network to see which lines work there.
 - `tools/sim-smoke.mjs`: drives the app in the Samsung TV Web Simulator with remote keys:
 
 ```sh

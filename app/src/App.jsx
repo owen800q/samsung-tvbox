@@ -3,6 +3,7 @@ import { LinePlayer } from './player/linePlayer.js';
 import { lineupFromCache, loadLineup, cacheAge, REFRESH_AFTER, getSubs, saveSubs } from './lib/lineup.js';
 import { GROUP_FAV } from './lib/channels.js';
 import * as store from './lib/storage.js';
+import { normalizeRelay, withRelay, isRelayed } from './lib/relay.js';
 import { KEY, isBack, digitOf, exitApp } from './platform/tizen.js';
 import { APP_VERSION } from './version.js';
 
@@ -80,7 +81,7 @@ export default function App() {
     setCur(ch);
     store.set('last', ch.key);
     const good = store.get('good', {});
-    playerRef.current.play(ch, good[ch.key]);
+    playerRef.current.play(withRelay(ch, store.get('relay', ''), store.get('relayFirst', false)), good[ch.key]);
     showBanner();
   }, [showBanner]);
 
@@ -191,6 +192,9 @@ export default function App() {
   const settingRows = useMemo(() => {
     const rows = subs.map((s, i) => ({ kind: 'sub', i, label: s.name, on: s.on, hint: s.custom ? s.url : (s.ipv6 ? '仅 IPv6 网络可用' : '') }));
     rows.push({ kind: 'add', label: '＋ 添加自定义直播源（M3U / TXT 地址）' });
+    const relay = store.get('relay', '');
+    rows.push({ kind: 'relay', label: '中转服务器', hint: relay ? relay.replace(/^https?:\/\/([^/]+).*$/, '$1') + '（按 OK 修改，清空即关闭）' : '未设置（可选，用于只限大陆观看的线路）' });
+    if (relay) rows.push({ kind: 'relayFirst', label: '优先使用中转', on: store.get('relayFirst', false), hint: '关闭时先试直连，失败再走中转' });
     rows.push({ kind: 'ipv6', label: 'IPv6 线路', on: store.get('ipv6', false), hint: '家里网络支持 IPv6 时再打开' });
     rows.push({ kind: 'refresh', label: '立即刷新频道列表' });
     rows.push({ kind: 'clear', label: '清除线路记忆（重新测速）' });
@@ -204,7 +208,11 @@ export default function App() {
       const next = subs.map((s, j) => (j === row.i ? { ...s, on: !s.on } : s));
       setSubs(next); saveSubs(next); setSubsDirty(true);
     } else if (row.kind === 'add') {
-      setAdding(true);
+      setAdding('source');
+    } else if (row.kind === 'relay') {
+      setAdding('relay');
+    } else if (row.kind === 'relayFirst') {
+      store.set('relayFirst', !store.get('relayFirst', false)); setSubs(subs.slice());
     } else if (row.kind === 'ipv6') {
       store.set('ipv6', !store.get('ipv6', false)); setSubsDirty(true); setSubs(subs.slice());
     } else if (row.kind === 'refresh') {
@@ -222,6 +230,15 @@ export default function App() {
       store.remove('good'); showToast('已清除线路记忆');
     }
   }, [subs, refresh, showToast]);
+
+  const setRelay = useCallback(value => {
+    setAdding(false);
+    const base = normalizeRelay(value);
+    if (String(value || '').trim() && !base) { showToast('地址无效'); return; }
+    if (base) store.set('relay', base); else store.remove('relay');
+    setSubs(subs.slice());
+    showToast(base ? '已设置中转服务器，换台后生效' : '已关闭中转');
+  }, [subs, showToast]);
 
   const addCustom = useCallback(url => {
     setAdding(false);
@@ -322,7 +339,8 @@ export default function App() {
     }
   }, [mode, list, setIdx]);
 
-  const lineText = pstate.lines > 1 ? '线路 ' + pstate.line + '/' + pstate.lines : pstate.lines === 1 ? '1 条线路' : '';
+  const viaRelay = isRelayed(store.get('relay', ''), pstate.url);
+  const lineText = (pstate.lines > 1 ? '线路 ' + pstate.line + '/' + pstate.lines : pstate.lines === 1 ? '1 条线路' : '') + (viaRelay ? '（中转）' : '');
   const busy = pstate.status && pstate.status !== 'playing' && pstate.status !== 'idle';
   const curGroup = groups[list.g];
 
@@ -399,7 +417,8 @@ export default function App() {
             </div>
           )}
           <div className="foot">↑↓ 选择 · OK 开关 · 返回 保存并关闭</div>
-          {adding && <AddSource onDone={addCustom} />}
+          {adding === 'source' && <AddSource onDone={addCustom} title="输入 M3U / TXT 直播源地址，按 OK 确定" initial="https://" />}
+          {adding === 'relay' && <AddSource onDone={setRelay} title="输入中转服务器地址（https://服务器:端口/密钥），留空关闭" initial={store.get('relay', '') || 'https://'} />}
         </div>
       )}
 
@@ -408,13 +427,13 @@ export default function App() {
   );
 }
 
-function AddSource({ onDone }) {
+function AddSource({ onDone, title, initial }) {
   const ref = useRef(null);
   useEffect(() => { if (ref.current) ref.current.focus(); }, []);
   return (
     <div className="add-source">
-      <div>输入 M3U / TXT 直播源地址，按 OK 确定</div>
-      <input ref={ref} type="url" defaultValue="https://"
+      <div>{title}</div>
+      <input ref={ref} type="url" defaultValue={initial}
         onKeyDown={e => { if (e.keyCode === 13 || e.keyCode === 65376) { e.preventDefault(); onDone(e.target.value); } }} />
     </div>
   );

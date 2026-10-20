@@ -9,3 +9,4 @@ Live TV for Samsung Tizen TVs, playing the IPTV lists from youhunwl/TVAPP. See R
 - Don't put streams or private URLs in the repo: the app fetches public lists at runtime.
 - Every push to `main` publishes a GitHub release, and installed TVs download its build (ota/README.md). A broken build reaches TVs at their next check: run the tests and the simulator smoke test first. Keep `ota/ota.js` ES5 (Tizen 4.0), and remember a change to it, `tizen/config.xml` or the icon needs a reinstall.
 - Don't commit the `build/` output.
+- The relay (`relay/server.mjs`) runs on the maintainer's server; changing it doesn't update that server, so say so in the PR. Its address is private: never put a relay URL in this public repo, its tests or builds. The TV keeps it in `tvbox_relay` only.
