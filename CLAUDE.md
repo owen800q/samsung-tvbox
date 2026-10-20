@@ -1,0 +1,9 @@
+# samsung-tvbox
+
+Live TV for Samsung Tizen TVs, playing the IPTV lists from youhunwl/TVAPP. See README.md.
+
+- Tests: `npm test` at the repo root. Run them before every push.
+- `npm run check:streams` shows which lines answer from the current network. Cloud sandboxes often reach only ports 80/443, so most mainland IP:port lines fail there; say so instead of reporting a channel as broken.
+- Simulator smoke test: see README "Testing". Wipe `~/.config/tizen tv web simulator` before launching, or the simulator may come up on its home screen instead of the app. A WARN (HEVC line, or every line timed out) is a limit of the simulator or the network, not a pass: report it as unverified.
+- Keep storage keys under the `tvbox_` prefix (`app/src/lib/storage.js`); saved favourites, subscriptions and the last channel must survive updates.
+- Don't put streams or private URLs in the repo: the app fetches public lists at runtime.

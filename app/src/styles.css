@@ -1,0 +1,79 @@
+/* 1920×1080 TV layout. Read from the sofa: large type, high contrast. */
+.app {
+  position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #000;
+  color: #fff; font-family: "SamsungOne", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: #000; object-fit: contain; }
+
+.center-msg {
+  position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 44px;
+  text-shadow: 0 2px 8px #000;
+}
+.center-msg small { display: block; margin-top: 18px; font-size: 30px; color: #bbb; }
+.center-msg.failed { color: #ff8a80; }
+
+.banner {
+  position: absolute; left: 60px; right: 60px; bottom: 60px; height: 170px; display: flex; align-items: center;
+  padding: 0 40px; border-radius: 20px;
+  background: linear-gradient(90deg, rgba(10, 20, 40, 0.92), rgba(10, 20, 40, 0.75));
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+.banner-num { font-size: 84px; font-weight: bold; color: #4fc3f7; min-width: 150px; }
+.banner-logo { height: 90px; max-width: 160px; margin-right: 30px; object-fit: contain; }
+.banner-main { flex: 1; min-width: 0; }
+.banner-name { font-size: 56px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.banner-sub { font-size: 30px; color: #b0bec5; margin-top: 8px; }
+.banner-hint { font-size: 26px; color: #78909c; align-self: flex-end; margin-bottom: 24px; }
+.star { color: #ffd54f; margin-left: 14px; }
+
+.digits {
+  position: absolute; right: 80px; top: 60px; font-size: 110px; font-weight: bold; color: #4fc3f7;
+  text-shadow: 0 4px 12px #000;
+}
+
+.toast {
+  position: absolute; left: 50%; top: 70px; transform: translateX(-50%); padding: 18px 44px;
+  font-size: 32px; border-radius: 40px; background: rgba(30, 30, 30, 0.9);
+}
+
+.panel {
+  position: absolute; left: 0; top: 0; bottom: 0; background: rgba(8, 14, 28, 0.94);
+  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6);
+}
+.panel .foot { position: absolute; left: 0; right: 0; bottom: 0; height: 70px; line-height: 70px; padding-left: 40px; font-size: 26px; color: #78909c; }
+.col { position: absolute; top: 40px; bottom: 80px; overflow: hidden; }
+.row { height: 76px; line-height: 76px; padding: 0 28px; font-size: 34px; border-radius: 12px; margin: 4px 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; }
+.row.sel { background: #1e88e5; }
+.row.sel.dim { background: rgba(30, 136, 229, 0.35); }
+.row .count { float: right; color: #90a4ae; font-size: 26px; }
+.row.sel .count { color: #e3f2fd; }
+
+.list { width: 1080px; }
+.list .groups { left: 0; width: 330px; border-right: 1px solid rgba(255, 255, 255, 0.08); }
+.list .chans { left: 330px; width: 750px; }
+.row.ch { display: flex; align-items: center; }
+.row.ch .num { width: 90px; color: #90a4ae; font-size: 28px; flex: none; }
+.row.ch .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.row.ch .lines { color: #607d8b; font-size: 24px; margin-left: 16px; flex: none; }
+.row.ch.playing .name { color: #4fc3f7; }
+.row.ch.playing.sel .name { color: #fff; }
+.row.sel .num, .row.sel .lines { color: #e3f2fd; }
+.row.hint { color: #90a4ae; }
+
+.settings { width: 1200px; }
+.settings .title { position: absolute; top: 30px; left: 44px; font-size: 44px; font-weight: bold; }
+.settings .title small { font-size: 24px; color: #78909c; font-weight: normal; margin-left: 20px; }
+.settings .setrows { top: 110px; left: 0; right: 0; bottom: 300px; }
+.settings .row { display: flex; align-items: center; }
+.settings .row .name { flex: none; max-width: 640px; overflow: hidden; text-overflow: ellipsis; }
+.settings .row .hint { flex: 1; color: #90a4ae; font-size: 24px; margin-left: 24px; overflow: hidden; text-overflow: ellipsis; }
+.settings .row.sel .hint { color: #e3f2fd; }
+.check { width: 44px; height: 44px; line-height: 40px; border: 3px solid #90a4ae; border-radius: 8px; margin-right: 24px; text-align: center; font-size: 30px; flex: none; }
+.check.on { background: #43a047; border-color: #43a047; }
+.srcstatus { position: absolute; left: 44px; right: 44px; bottom: 80px; height: 210px; overflow: hidden; font-size: 24px; line-height: 34px; color: #b0bec5; }
+
+.add-source {
+  position: absolute; left: 100px; right: 100px; top: 380px; padding: 40px; border-radius: 20px;
+  background: #102a43; font-size: 32px; box-shadow: 0 10px 50px #000;
+}
+.add-source input { width: 100%; margin-top: 24px; height: 80px; font-size: 34px; padding: 0 20px; border-radius: 10px; border: 3px solid #1e88e5; }

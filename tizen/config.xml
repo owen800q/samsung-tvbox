@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
+        id="https://github.com/owen800q/samsung-tvbox" version="1.0.0" viewmodes="maximized">
+    <tizen:application id="TVBoxLive0.TVBoxLive" package="TVBoxLive0" required_version="4.0"/>
+    <name>电视直播</name>
+    <description>Live TV for Samsung TVs: CCTV, 卫视 (湖南, 广东…) and local channels from public IPTV lists, driven by the remote.</description>
+    <icon src="icon.png"/>
+    <content src="index.html"/>
+    <author href="https://github.com/owen800q/samsung-tvbox">samsung-tvbox contributors</author>
+    <license href="https://github.com/owen800q/samsung-tvbox/blob/main/LICENSE">MIT</license>
+
+    <!-- Playlists come from GitHub and other hosts, and streams from any
+         http(s) host and port. A packaged app may only reach listed origins. -->
+    <access origin="*" subdomains="true"/>
+    <tizen:allow-navigation>*</tizen:allow-navigation>
+    <tizen:content-security-policy>default-src * 'self' data: blob: 'unsafe-inline' 'unsafe-eval'; img-src * data: blob:; media-src * blob: data:; connect-src * blob: data:;</tizen:content-security-policy>
+
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+
+    <tizen:profile name="tv-samsung"/>
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable"
+                   encryption="disable" install-location="auto" hwkey-event="enable"/>
+</widget>
