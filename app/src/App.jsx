@@ -7,6 +7,17 @@ import { KEY, isBack, digitOf, exitApp } from './platform/tizen.js';
 import { APP_VERSION } from './version.js';
 
 const SETTINGS_GROUP = '设置';
+// The over-the-air loader (ota/ota.js) when the app runs from the packaged widget.
+const ota = typeof window !== 'undefined' ? window.__ota : null;
+const VERSION = (ota && ota.version) || APP_VERSION;
+const OTA_RESULT = {
+  current: '已是最新版本',
+  downloaded: '新版本已下载，按 OK 重启后生效',
+  pending: '新版本已下载，按 OK 重启后生效',
+  busy: '正在检查更新…',
+  error: '检查更新失败，请检查网络',
+  off: '此安装包未开启自动更新',
+};
 const BANNER_MS = 5000;
 const DIGIT_MS = 1800;
 
@@ -43,6 +54,7 @@ export default function App() {
   const [subsDirty, setSubsDirty] = useState(false);
   const [adding, setAdding] = useState(false);
   const [lastStatus, setLastStatus] = useState(null); // per-source load results
+  const [updateReady, setUpdateReady] = useState(() => !!(ota && ota.pending()));
   const timers = useRef({});
   const backAt = useRef(0);
 
@@ -182,8 +194,10 @@ export default function App() {
     rows.push({ kind: 'ipv6', label: 'IPv6 线路', on: store.get('ipv6', false), hint: '家里网络支持 IPv6 时再打开' });
     rows.push({ kind: 'refresh', label: '立即刷新频道列表' });
     rows.push({ kind: 'clear', label: '清除线路记忆（重新测速）' });
+    if (updateReady) rows.push({ kind: 'restart', label: '立即重启，使用新版本' });
+    else rows.push({ kind: 'update', label: '检查更新', hint: '当前 v' + VERSION + (ota ? '' : '（开发版）') });
     return rows;
-  }, [subs, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [subs, mode, updateReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const actSetting = useCallback(row => {
     if (row.kind === 'sub') {
@@ -195,6 +209,15 @@ export default function App() {
       store.set('ipv6', !store.get('ipv6', false)); setSubsDirty(true); setSubs(subs.slice());
     } else if (row.kind === 'refresh') {
       setSubsDirty(false); setMode('tv'); refresh(true);
+    } else if (row.kind === 'update') {
+      if (!ota) { showToast('开发版没有在线更新'); return; }
+      showToast('正在检查更新…');
+      ota.check(result => {
+        showToast(OTA_RESULT[result] || result);
+        if (result === 'downloaded' || result === 'pending') setUpdateReady(true);
+      });
+    } else if (row.kind === 'restart') {
+      ota && ota.restart();
     } else if (row.kind === 'clear') {
       store.remove('good'); showToast('已清除线路记忆');
     }
@@ -358,7 +381,7 @@ export default function App() {
 
       {mode === 'settings' && (
         <div className="panel settings">
-          <div className="title">设置 <small>直播源来自 youhunwl/TVAPP · v{APP_VERSION}</small></div>
+          <div className="title">设置 <small>直播源来自 youhunwl/TVAPP · v{VERSION}</small></div>
           <div className="col setrows" ref={setColRef}>
             {settingRows.map((r, i) => (
               <div key={i} className={'row' + (i === setIdx ? ' sel' : '')}>

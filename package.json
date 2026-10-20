@@ -6,7 +6,7 @@
   "description": "Live TV (CCTV, 卫视, local channels) for Samsung Tizen TVs, using the IPTV source lists from youhunwl/TVAPP",
   "scripts": {
     "build": "cd app && npm ci --no-audit --no-fund && npm run build",
-    "test": "cd app && npm test",
+    "test": "node --test ota/*.test.mjs && cd app && npm test",
     "check:streams": "node tools/check-streams.mjs"
   },
   "engines": { "node": ">=20" }

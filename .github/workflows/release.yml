@@ -1,0 +1,63 @@
+name: Release TV app
+# Every push to main publishes a GitHub release (v<major>.<minor>.<run>) with:
+#   TVBoxLive.wgt        the widget, for a first install or a tizen/config.xml change
+#   ota-manifest.json    what installed TVs check, at releases/latest/download/
+#   ota-<build id>.json  the whole app build; TVs download it when the id is new
+# Installed TVs update themselves from the latest release (ota/README.md).
+# Signing uses the repository secrets TIZEN_AUTHOR_P12 / TIZEN_DISTRIBUTOR_P12 (base64)
+# and TIZEN_AUTHOR_PASSWORD / TIZEN_DISTRIBUTOR_PASSWORD; without them the widget is unsigned.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: app
+      - run: npm test
+      - run: npm run build
+        working-directory: app
+      - name: Package
+        working-directory: app
+        run: |
+          VERSION="$(node -p "/APP_VERSION = '([\\d.]+)'/.exec(require('fs').readFileSync('src/version.js', 'utf8'))[1].split('.').slice(0, 2).join('.')").${{ github.run_number }}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          TV_VERSION="$VERSION" node ../scripts/package-wgt.mjs
+          TV_VERSION="$VERSION" RELEASE_TAG="v$VERSION" node ../scripts/ota-release.mjs
+      - name: Sign
+        env:
+          TIZEN_AUTHOR_P12: ${{ secrets.TIZEN_AUTHOR_P12 }}
+          TIZEN_AUTHOR_PASSWORD: ${{ secrets.TIZEN_AUTHOR_PASSWORD }}
+          TIZEN_DISTRIBUTOR_P12: ${{ secrets.TIZEN_DISTRIBUTOR_P12 }}
+          TIZEN_DISTRIBUTOR_PASSWORD: ${{ secrets.TIZEN_DISTRIBUTOR_PASSWORD }}
+        run: |
+          if [ -z "$TIZEN_AUTHOR_P12" ] || [ -z "$TIZEN_DISTRIBUTOR_P12" ]; then
+            echo "::warning::No Tizen certificate secrets: the release carries an unsigned widget."
+            exit 0
+          fi
+          bash .github/scripts/sign-wgt.sh build/widget build/TVBoxLive.wgt
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          WGT=build/TVBoxLive.wgt
+          [ -f "$WGT" ] || WGT=build/TVBoxLive-unsigned.wgt
+          NOTES="$(git log -1 --format='%s%n%n%b' "$GITHUB_SHA")
+
+          Commit: $GITHUB_SHA
+          Build: $(node -p "require('./build/release/ota-manifest.json').id")
+          Installed TVs download this build from the latest release on their own; install the widget only for a first install or a config.xml change."
+          gh release create "v$VERSION" "$WGT" build/release/ota-manifest.json build/release/ota-*.json \
+            --target "$GITHUB_SHA" --title "电视直播 $VERSION" --notes "$NOTES" --latest

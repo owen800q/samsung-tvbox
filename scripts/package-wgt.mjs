@@ -1,11 +1,17 @@
 // Assemble the Tizen widget from the Vite build (app/dist) and sign it when the
 // Tizen CLI is available.
 //   cd app && npm run package [-- --profile <security-profile>]
-// The widget version comes from app/src/version.js (APP_VERSION).
+// The widget version comes from app/src/version.js (APP_VERSION); TV_VERSION
+// overrides it (the release workflow sets it).
+// The widget starts through the over-the-air loader (ota/): the build sits under
+// app/, and newer builds come from the repository's latest GitHub release.
+//   OTA=0               package without updates
+//   OTA_MANIFEST=<url>  check another manifest (testing)
 import { cpSync, existsSync, readFileSync, writeFileSync, rmSync, mkdirSync, readdirSync, renameSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeWidget, MANIFEST_URL } from '../ota/build.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'app', 'dist');
@@ -19,9 +25,14 @@ const versionSrc = readFileSync(join(root, 'app', 'src', 'version.js'), 'utf8');
 const version = process.env.TV_VERSION || (versionSrc.match(/APP_VERSION\s*=\s*'([\d.]+)'/) || [])[1];
 if (!version) throw new Error('APP_VERSION not found in app/src/version.js');
 
-rmSync(out, { recursive: true, force: true });
+const manifest = process.env.OTA === '0' ? null : (process.env.OTA_MANIFEST || MANIFEST_URL);
+rmSync(stage, { recursive: true, force: true });
+for (const f of existsSync(out) ? readdirSync(out) : []) if (f.endsWith('.wgt')) rmSync(join(out, f));
 mkdirSync(stage, { recursive: true });
-cpSync(dist, stage, { recursive: true });
+const id = await writeWidget({
+  dir: dist, html: readFileSync(join(dist, 'index.html'), 'utf8'), stage, key: 'tvbox', version, manifest,
+  text: '新版本已下载，下次打开时生效', updated: '已更新到新版本', check: '#root',
+});
 const config = readFileSync(join(root, 'tizen', 'config.xml'), 'utf8')
   .replace(/(<widget[^>]*\sversion=")[^"]*"/, `$1${version}"`);
 writeFileSync(join(stage, 'config.xml'), config);
@@ -45,10 +56,10 @@ if (tizen) {
   // push non-ASCII file names.
   const built = readdirSync(out).find(f => f.endsWith('.wgt'));
   if (built && built !== 'TVBoxLive.wgt') renameSync(join(out, built), join(out, 'TVBoxLive.wgt'));
-  console.log(`Widget written to build/TVBoxLive.wgt (v${version}${profile ? ', signed with ' + profile : ', unsigned'})`);
+  console.log(`Widget written to build/TVBoxLive.wgt (v${version}, build ${id}${profile ? ', signed with ' + profile : ', unsigned'})${manifest ? '' : ', updates off'}`);
 } else {
   const target = join(out, 'TVBoxLive-unsigned.wgt');
   execFileSync('zip', ['-qr', target, '.'], { cwd: stage });
-  console.log(`Tizen CLI not found. Unsigned widget: build/TVBoxLive-unsigned.wgt (v${version})`);
+  console.log(`Tizen CLI not found. Unsigned widget: build/TVBoxLive-unsigned.wgt (v${version}, build ${id})${manifest ? '' : ', updates off'}`);
   console.log('A TV only installs signed widgets: see README "Build and install".');
 }

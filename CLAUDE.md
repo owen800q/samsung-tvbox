@@ -7,3 +7,5 @@ Live TV for Samsung Tizen TVs, playing the IPTV lists from youhunwl/TVAPP. See R
 - Simulator smoke test: see README "Testing". Wipe `~/.config/tizen tv web simulator` before launching, or the simulator may come up on its home screen instead of the app. A WARN (HEVC line, or every line timed out) is a limit of the simulator or the network, not a pass: report it as unverified.
 - Keep storage keys under the `tvbox_` prefix (`app/src/lib/storage.js`); saved favourites, subscriptions and the last channel must survive updates.
 - Don't put streams or private URLs in the repo: the app fetches public lists at runtime.
+- Every push to `main` publishes a GitHub release, and installed TVs download its build (ota/README.md). A broken build reaches TVs at their next check: run the tests and the simulator smoke test first. Keep `ota/ota.js` ES5 (Tizen 4.0), and remember a change to it, `tizen/config.xml` or the icon needs a reinstall.
+- Don't commit the `build/` output.

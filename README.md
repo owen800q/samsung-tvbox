@@ -44,13 +44,19 @@ npm run package -- --profile <profile>       # → build/TVBoxLive.wgt (signed)
 ../scripts/tv.sh <tv-ip> <profile>           # build, install and launch on a TV in Developer mode
 ```
 
-Without the Tizen CLI, `npm run package` writes an unsigned `build/TVBoxLive-unsigned.wgt`; a TV installs only signed widgets. App ID `TVBoxLive0.TVBoxLive`. The version comes from `app/src/version.js`.
+The widget starts through the update loader; `OTA=0 npm run package` builds one without updates. Without the Tizen CLI, `npm run package` writes an unsigned `build/TVBoxLive-unsigned.wgt`; a TV installs only signed widgets. App ID `TVBoxLive0.TVBoxLive`. The version comes from `app/src/version.js`.
+
+### Updates
+
+Installed TVs update themselves from this repository's GitHub releases, with no server of their own. Every push to `main` publishes a release (`.github/workflows/release.yml`) with the widget and the app build. The TV checks `releases/latest` in the background, downloads a new build into storage, and uses it from the next launch. 设置 → 检查更新 checks at once, and 立即重启 switches to a downloaded build. A broken build falls back to the installed one. See [ota/README.md](ota/README.md).
+
+Reinstall the widget only after changing `tizen/config.xml`, the icon or the loader. Each release carries `TVBoxLive.wgt`, signed when the repository has the certificate secrets listed in ota/README.md.
 
 Browser development: `cd app && npm run dev` (http://localhost:5173 at 1920×1080). Arrows, Enter and Esc stand in for the remote. Desktop browsers enforce CORS, so some playlists and streams only load on the TV or in the simulator.
 
 ## Testing
 
-- `npm test`: the playlist parsers, channel merging and grouping, line ordering, the probe and failover.
+- `npm test`: the playlist parsers, channel merging and grouping, line ordering, the probe and failover, and the update loader (`ota/`).
 - `npm run check:streams [-- 湖南卫视 广东卫视 …] [--all-sources]`: fetches the subscriptions and tests every line of the main channels from the current network (playlist plus first segment). Use it on the TV's network to see which lines work there.
 - `tools/sim-smoke.mjs`: drives the app in the Samsung TV Web Simulator with remote keys:
 
