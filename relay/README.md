@@ -10,7 +10,26 @@ Live TV is a constant 3–8 Mbps. That's about **1.5–3.5 GB per hour** of view
 
 The relay only helps lines that are refused outside mainland China. Lines on overseas servers (US IP:port hosts) get slower through it, so the TV tries those directly first. Lines that only work inside one ISP's own network fail through it too.
 
-## Install on the server
+## Install on the server: the script
+
+`setup.sh` does the steps below in one go:
+- checks Node;
+- downloads `server.mjs` (falling back to GitHub mirrors);
+- creates a secret, or keeps the one from an earlier install;
+- reuses the certificate of the `bili-relay` service when there is one, found through its `LoadCredential=` lines;
+- writes and starts a systemd service that runs as a throwaway user;
+- adds an hourly timer that restarts the relay after a certificate renewal;
+- opens the port in `ufw` if it's active;
+- prints the address to enter on the TV.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/owen800q/samsung-tvbox/main/relay/setup.sh -o setup.sh
+sudo bash setup.sh                      # or: --cert F --key F, --port N, --no-tls, --dry-run, --uninstall
+```
+
+If GitHub is slow from the server, put `https://gh-proxy.com/` in front of the URL. Re-run the script to update the relay; it keeps the port and secret. You still need to open the port (default **9997**, TCP) in the cloud firewall yourself: for Tencent Cloud Lighthouse, go to 轻量应用服务器 → the server → 防火墙 → 添加规则.
+
+## Install on the server: by hand
 
 The address and secret below are examples: use your own. Keep the relay address private. Don't put it in this repository, which is public, or in its builds: enter it on the TV only.
 
