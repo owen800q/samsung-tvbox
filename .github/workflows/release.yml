@@ -54,10 +54,13 @@ jobs:
         run: |
           WGT=build/TVBoxLive.wgt
           [ -f "$WGT" ] || WGT=build/TVBoxLive-unsigned.wgt
+          ID="$(node -p "require('./build/release/ota-manifest.json').id")"
           NOTES="$(git log -1 --format='%s%n%n%b' "$GITHUB_SHA")
 
           Commit: $GITHUB_SHA
-          Build: $(node -p "require('./build/release/ota-manifest.json').id")
+          Build: $ID
           Installed TVs download this build from the latest release on their own; install the widget only for a first install or a config.xml change."
-          gh release create "v$VERSION" "$WGT" build/release/ota-manifest.json build/release/ota-*.json \
+          # Name the bundle exactly: ota-*.json would also match ota-manifest.json, and
+          # uploading the same asset twice fails with HTTP 404.
+          gh release create "v$VERSION" "$WGT" build/release/ota-manifest.json "build/release/ota-$ID.json" \
             --target "$GITHUB_SHA" --title "电视直播 $VERSION" --notes "$NOTES" --latest
